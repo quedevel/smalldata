@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jarvis.mapper.ResMapper">
+
+	<insert id="insertRep">
+		insert into tbl_rep (rno, no, score, reply)
+		values (seq_rep.nextval, ${no}, #{score}, #{reply})
+	</insert>
+
+	<select id="repList" resultType="org.jarvis.domain.RepVO">
+		select * from tbl_rep where no = #{no} order by regdate desc
+	</select>
+
+	<select id="selectRes" resultType="org.jarvis.domain.ResVO">
+		select * from tbl_res where no = #{no}
+	</select>
+	
+	<select id="resList" resultType="org.jarvis.domain.ResVO">
+	<![CDATA[
+  	select * from
+    (select res.*, sqrt( power(lat-#{lat},2) + power(lng - #{lng},2)) distance from tbl_res res
+    order by distance  ) 
+    where rownum <= 5
+  	]]>
+	</select>
+</mapper>
