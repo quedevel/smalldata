@@ -2,6 +2,8 @@ package org.jarvis.controller;
 
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.jarvis.domain.RepVO;
 import org.jarvis.domain.ResVO;
 import org.jarvis.dto.LocationDTO;
@@ -31,7 +33,6 @@ public class ResController {
 	@CrossOrigin
 	@PostMapping("/list")
 	public ResponseEntity<List<ResVO>> getResList(@RequestBody LocationDTO dto) {
-		log.info("-------------------------------------------------------------");
 		log.info(dto);
 		return new ResponseEntity<List<ResVO>>(service.resList(dto), HttpStatus.OK);
 	}
@@ -50,8 +51,7 @@ public class ResController {
 
 	@CrossOrigin
 	@PostMapping("/register")
-	public ResponseEntity<String> repRegister(@RequestBody RepVO vo) {
-		log.info("=================================================================");
+	public ResponseEntity<String> repRegister(@RequestBody @Valid RepVO vo) {
 		service.insertRep(vo);
 		return new ResponseEntity<String>("메세지가 입력 되었습니다.",HttpStatus.CREATED);
 	}

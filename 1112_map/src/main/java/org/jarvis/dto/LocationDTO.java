@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class LocationDTO {
 	private double lat, lng;
-	private String categorys;
+	private String[] categorys;
 }

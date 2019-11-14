@@ -25,7 +25,6 @@ public class ResServiceTests {
 		LocationDTO dto = new LocationDTO();
 		dto.setLat(37.570444);
 		dto.setLng(126.985320);
-		
 		log.info(mapper.resList(dto));
 		
 		

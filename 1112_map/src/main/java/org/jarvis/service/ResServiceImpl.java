@@ -9,7 +9,10 @@ import org.jarvis.mapper.ResMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.log4j.Log4j;
+
 @Service
+@Log4j
 public class ResServiceImpl implements ResSerivce {
 
 	@Autowired
@@ -34,10 +37,12 @@ public class ResServiceImpl implements ResSerivce {
 
 	@Override
 	public List<ResVO> resList(LocationDTO dto) {
+		log.info("serviceImpl - -=- =- =- =-=  "+dto);
 		List<ResVO> result = mapper.resList(dto);
 		for (ResVO vo: result) {
 			vo.setReps(mapper.repList(vo.getNo()));
 		}
+		log.info(result);
 		return result;
 	}
 

@@ -17,12 +17,23 @@
 		select * from tbl_res where no = #{no}
 	</select>
 	
-	<select id="resList" resultType="org.jarvis.domain.ResVO">
-	<![CDATA[
-  	select * from
-    (select res.*, sqrt( power(lat-#{lat},2) + power(lng - #{lng},2)) distance from tbl_res res
-    order by distance  ) 
-    where rownum <= 5
-  	]]>
-	</select>
+	 <select id="resList" resultType="org.jarvis.domain.ResVO">
+      select * from
+      (select res.*, sqrt(power(lat - #{lat} ,2) + power(lng - #{lng} ,2)) dis
+      from tbl_res res 
+      <include refid="category"/>
+      order by dis)
+      where <![CDATA[rownum <= 5]]>
+   </select>
+   
+   <sql id="category">
+   <if test="categorys.length != 0">
+   where category in
+         <foreach collection="categorys" open="(" close=")" item="category" separator=",">
+            #{category}
+         </foreach>
+      </if>
+   </sql>
+   
+   
 </mapper>
