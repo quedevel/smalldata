@@ -95,7 +95,6 @@
 							var item = result[i];
 							str += "<li onclick='javascript:down(\""+item.uuid+"\")'>";
 							
-							
 							console.log(result[i]);
 							str += item.fileName;
 							

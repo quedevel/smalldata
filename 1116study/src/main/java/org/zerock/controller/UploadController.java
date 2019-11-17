@@ -21,27 +21,53 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.zerock.dto.AttachDTO;
 
+import lombok.extern.log4j.Log4j;
 import net.coobird.thumbnailator.Thumbnailator;
 
+@Log4j
 @Controller
 public class UploadController {
 
-	@GetMapping("/uploadForm")
-	public void uploadByForm() {
-	}
+//	@GetMapping("/uploadForm")
+//	public void uploadByForm() {
+//	}
+
+//	@PostMapping("/uploadFormAction")
+//	public void uploadFormPost(MultipartFile[] uploadFile, Model model) {
+//		
+//		for(MultipartFile multipartFile : uploadFile) {
+//			log.info("-----------------------------------------------");
+//			log.info("Upload File Name: " + multipartFile.getOriginalFilename());
+//			log.info("Upload File Size: " + multipartFile.getSize());
+//			
+//			String uploadFileName = multipartFile.getOriginalFilename();
+//			// IE has file path
+//			uploadFileName = uploadFileName.substring(uploadFileName.lastIndexOf("\\") + 1);
+//			log.info("only file name: " + uploadFileName);
+//			UUID uuid = UUID.randomUUID();
+//			String uploadName = uuid.toString() + "_" + uploadFileName;
+//			File saveFile = new File("C:\\upload", uploadName);
+//			
+//			try {
+//				multipartFile.transferTo(saveFile);
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 
 	@GetMapping("/uploadAjax")
 	public void uploadByAjax() {
 	}
 
-	@GetMapping(value = "/downFile", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@GetMapping("/downFile")
 	@ResponseBody
 	public ResponseEntity<byte[]> downFile(String fname) {
 		File file = new File("C:\\upload", fname);
 		try {
 			HttpHeaders header = new HttpHeaders();
 			header.add("Content-Disposition",
-			          "attachment; filename=" + new String(fname.getBytes("UTF-8"), "ISO-8859-1"));
+			          "attachment; filename=" + new String(fname.substring(fname.lastIndexOf("_")+1).getBytes("UTF-8"), "ISO-8859-1"));
 			byte[] data = FileCopyUtils.copyToByteArray(file);
 			return new ResponseEntity<>(data, header, HttpStatus.OK);
 		} catch (IOException e) {
@@ -53,14 +79,13 @@ public class UploadController {
 	@GetMapping("/viewFile")
 	@ResponseBody
 	public ResponseEntity<byte[]> viewFile(String fname) {
-
 		File file = new File("C:\\upload", fname);
 		try {
-			String mimeType = Files.probeContentType(file.toPath());
+			String contentType = Files.probeContentType(file.toPath());
 			HttpHeaders header = new HttpHeaders();
-			header.add("Content-Type", mimeType);
+			header.add("Content-Type", contentType);
 			byte[] data = FileCopyUtils.copyToByteArray(file);
-			return new ResponseEntity<>(data, header, HttpStatus.OK);
+			return new ResponseEntity<byte[]>(data, header, HttpStatus.OK);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -70,86 +95,49 @@ public class UploadController {
 	@PostMapping(value = "/uploadAjaxAction", produces = MediaType.APPLICATION_PROBLEM_JSON_UTF8_VALUE)
 	@ResponseBody
 	public ResponseEntity<List<AttachDTO>> uploadAjaxPost(MultipartFile[] uploadFile, Model model) {
-		String uploadFolder = "C:\\upload";
-
-		List<AttachDTO> attachList = new ArrayList<>();
-
+		List<AttachDTO> list = new ArrayList<>();
 		for (MultipartFile multipartFile : uploadFile) {
-
-			System.out.println("-------------------------------------");
-			System.out.println("Upload File Name: " + multipartFile.getOriginalFilename());
-			System.out.println("Upload File Size: " + multipartFile.getSize());
+			log.info("-----------------------------------------------");
+			log.info("Upload File Name: " + multipartFile.getOriginalFilename());
+			log.info("Upload File Size: " + multipartFile.getSize());
 
 			String uploadFileName = multipartFile.getOriginalFilename();
 			// IE has file path
 			uploadFileName = uploadFileName.substring(uploadFileName.lastIndexOf("\\") + 1);
-			System.out.println("only file name: " + uploadFileName);
-
+			log.info("only file name: " + uploadFileName);
 			UUID uuid = UUID.randomUUID();
-
 			String uploadName = uuid.toString() + "_" + uploadFileName;
-
-			File saveFile = new File(uploadFolder, uploadName);
+			File saveFile = new File("C:\\upload", uploadName);
 
 			try {
 				multipartFile.transferTo(saveFile);
 				boolean isImage = checkImageType(saveFile);
 				if (isImage) {
-					System.out.println("이미지 파일이 업로드 되었고, 썸네일 작업 시작");
-					FileOutputStream thumbnail = new FileOutputStream(new File(uploadFolder, "s_" + uploadName));
+					FileOutputStream thumbnail = new FileOutputStream(new File("C:\\upload", "s_" + uploadName));
 					Thumbnailator.createThumbnail(multipartFile.getInputStream(), thumbnail, 100, 100);
 					thumbnail.close();
 				}
-
-				AttachDTO fileInfo = new AttachDTO(multipartFile.getOriginalFilename(), isImage, uploadName);
-
-				System.out.println("fileInfo ===== " + fileInfo);
-
-				attachList.add(fileInfo);
-
+				AttachDTO fileInfo = new AttachDTO(multipartFile.getOriginalFilename(), uploadName, isImage);
+				log.info("AttachDTO :                " + fileInfo);
+				list.add(fileInfo);
 			} catch (Exception e) {
-				System.out.println(e.getMessage());
-			} // end catch
-		} // end for
+				e.printStackTrace();
+			} // try - catch
+		} // for
 
-		return new ResponseEntity<List<AttachDTO>>(attachList, HttpStatus.OK);
-	}
-
-	@PostMapping("/uploadFormAction")
-	public void uploadFormPost(MultipartFile[] uploadFile, Model model) {
-		String uploadFolder = "C:\\upload";
-
-		for (MultipartFile multipartFile : uploadFile) {
-
-			System.out.println("-------------------------------------");
-			System.out.println("Upload File Name: " + multipartFile.getOriginalFilename());
-			System.out.println("Upload File Size: " + multipartFile.getSize());
-
-			File saveFile = new File(uploadFolder, multipartFile.getOriginalFilename());
-
-			try {
-				multipartFile.transferTo(saveFile);
-			} catch (Exception e) {
-				System.out.println(e.getMessage());
-			} // end catch
-
-		}
+		return new ResponseEntity<List<AttachDTO>>(list, HttpStatus.OK);
 	}
 
 	private boolean checkImageType(File file) {
 		boolean result = false;
 
 		try {
-			String mimeType = Files.probeContentType(file.toPath());
-
-			System.out.println(mimeType);
-
-			result = mimeType.startsWith("image");
+			String contentType = Files.probeContentType(file.toPath());
+			log.info("checkImageType =                        " + contentType);
+			result = contentType.startsWith("image");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 		return result;
 	}
 
